@@ -1,0 +1,37 @@
+name: Build Image List
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-csv:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate CSV
+        run: |
+          echo "filename,url" > image_lookup.csv
+
+          find . -maxdepth 1 \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) | while read file
+          do
+            fname=$(basename "$file")
+            echo "$fname,https://raw.githubusercontent.com/SAL-Wholesale/Images/main/$fname" >> image_lookup.csv
+          done
+
+      - name: Commit CSV
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+          git add image_lookup.csv
+
+          git diff --staged --quiet || \
+          git commit -m "Update image lookup"
+
+      - name: Push CSV
+        run: git push
+``
